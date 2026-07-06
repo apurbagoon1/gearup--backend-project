@@ -8,7 +8,6 @@ import { SignOptions } from "jsonwebtoken";
 const register = async (payload: any) => {
   const { name, email, password, role, phone, photo } = payload;
 
-  // Manual Validation
   if (!name || !email || !password || !role) {
     throw new Error("Name, email, password and role are required.");
   }
