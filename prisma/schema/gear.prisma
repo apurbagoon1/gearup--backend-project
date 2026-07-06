@@ -6,7 +6,7 @@ model Gear {
   description   String
 
   brand         String
-  image         String
+  image         String[]
 
   pricePerDay   Float
   stock         Int
