@@ -1,0 +1,39 @@
+model Payment {
+
+  id               String @id @default(uuid())
+
+  rentalOrderId    String @unique
+
+  rentalOrder      RentalOrder @relation(fields: [rentalOrderId], references: [id])
+
+  amount           Float
+
+  method           String
+
+  provider         PaymentProvider
+
+  transactionId    String?
+
+  status           PaymentStatus @default(PENDING)
+
+  paidAt           DateTime?
+
+  createdAt        DateTime @default(now())
+
+}
+
+enum PaymentStatus {
+
+  PENDING
+  COMPLETED
+  FAILED
+
+}
+
+enum PaymentProvider {
+
+  STRIPE
+  SSLCOMMERZ
+
+}
+
