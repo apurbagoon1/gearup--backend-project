@@ -4,12 +4,16 @@ import { hashPassword, comparePassword } from "../../helpers/password";
 import { generateToken } from "../../helpers/jwt";
 import config from "../../config";
 import { SignOptions } from "jsonwebtoken";
+import AppError from "../../errors/AppError";
 
 const register = async (payload: any) => {
   const { name, email, password, role, phone, photo } = payload;
 
   if (!name || !email || !password || !role) {
-    throw new Error("Name, email, password and role are required.");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Name, email, password and role are required.",
+    );
   }
 
   const isUserExists = await prisma.user.findUnique({
@@ -19,7 +23,7 @@ const register = async (payload: any) => {
   });
 
   if (isUserExists) {
-    throw new Error("Email already exists.");
+    throw new AppError(httpStatus.CONFLICT, "Email already exists.");
   }
 
   const hashedPassword = await hashPassword(password);
@@ -59,7 +63,10 @@ const login = async (payload: any) => {
   const { email, password } = payload;
 
   if (!email || !password) {
-    throw new Error("Email and password are required.");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Email and password are required.",
+    );
   }
 
   const user = await prisma.user.findUnique({
@@ -69,13 +76,13 @@ const login = async (payload: any) => {
   });
 
   if (!user) {
-    throw new Error("Invalid credentials.");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials.");
   }
 
   const isPasswordMatched = await comparePassword(password, user.password);
 
   if (!isPasswordMatched) {
-    throw new Error("Invalid credentials.");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials.");
   }
 
   const accessToken = generateToken(

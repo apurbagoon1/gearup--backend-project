@@ -7,6 +7,7 @@ import routes from "./routes";
 import auth from "./middlewares/auth";
 import { Role } from "../generated/prisma/client";
 import authorize from "./middlewares/authorize";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
 
 const app: Application = express();
 
@@ -17,10 +18,12 @@ app.use(
   }),
 );
 
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// All routes
 app.use("/api", routes);
 
 app.get("/", (req: Request, res: Response) => {
@@ -58,5 +61,17 @@ app.get(
     });
   },
 );
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API Not Found",
+    errorDetails: null,
+  });
+});
+
+// Global error handler
+app.use(globalErrorHandler);
 
 export default app;

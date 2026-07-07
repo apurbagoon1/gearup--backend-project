@@ -1,47 +1,45 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import httpStatus from "http-status";
 
-const register = async (req: Request, res: Response) => {
+const register = catchAsync(async (req, res) => {
   const result = await AuthService.register(req.body);
 
-  res.status(201).json({
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
     success: true,
-    message: "User registered successfully.",
+    message: "Registration successful.",
     data: result,
   });
-};
+});
 
-const login = async (req: Request, res: Response) => {
+const login = catchAsync(async (req, res) => {
   const result = await AuthService.login(req.body);
 
-  res.status(200).json({
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
-    message: "User logged in successfully.",
+    message: "Login successful.",
     data: result,
   });
-};
+});
 
-const getMyProfile = async (
-  req: Request,
-  res: Response,
-) => {
-
+const getMyProfile = catchAsync(async (req, res) => {
   const result = await AuthService.getMyProfile(
     req.user!.userId,
   );
 
-  res.status(200).json({
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: "Profile retrieved successfully.",
     data: result,
   });
+});
 
-};
-
-const updateMyProfile = async (
-  req: Request,
-  res: Response,
-) => {
+const updateMyProfile = catchAsync(async (req, res) => {
   const { name, phone, photo } = req.body;
 
   if (
@@ -49,10 +47,11 @@ const updateMyProfile = async (
     phone === undefined &&
     photo === undefined
   ) {
-    return res.status(400).json({
+    return sendResponse(res, {
+      statusCode: httpStatus.BAD_REQUEST,
       success: false,
       message: "No data provided for update.",
-      errorDetails: null,
+      data: null,
     });
   }
 
@@ -67,12 +66,13 @@ const updateMyProfile = async (
     payload,
   );
 
-  res.status(200).json({
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: "Profile updated successfully.",
     data: result,
   });
-};
+});
 
 export const AuthController = {
   register,
