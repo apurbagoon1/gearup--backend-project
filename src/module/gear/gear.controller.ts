@@ -174,9 +174,37 @@ const updateGear = catchAsync(async (req, res) => {
   return;
 });
 
+const deleteGear = catchAsync(async (req, res) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+
+  if (!id) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Gear id is required.",
+    );
+  }
+
+  await GearService.deleteGear(
+    req.user!.userId,
+    id,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Gear deleted successfully.",
+    data: null,
+  });
+
+  return;
+});
+
 export const GearController = {
   createGear,
   getAllGear,
   getGearById,
   updateGear,
+  deleteGear,
 };

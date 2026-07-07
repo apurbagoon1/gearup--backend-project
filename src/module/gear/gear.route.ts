@@ -33,4 +33,11 @@ router.patch(
   GearController.updateGear,
 );
 
+router.delete(
+  "/:id",
+  auth,
+  authorize(Role.PROVIDER),
+  GearController.deleteGear,
+);
+
 export default router;

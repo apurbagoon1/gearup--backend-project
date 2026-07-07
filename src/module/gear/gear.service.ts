@@ -179,9 +179,43 @@ const updateGear = async (
   return updatedGear;
 };
 
+const deleteGear = async (
+  providerId: string,
+  gearId: string,
+) => {
+  const gear = await prisma.gear.findUnique({
+    where: {
+      id: gearId,
+    },
+  });
+
+  if (!gear) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Gear not found.",
+    );
+  }
+
+  if (gear.providerId !== providerId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not allowed to delete this gear.",
+    );
+  }
+
+  await prisma.gear.delete({
+    where: {
+      id: gearId,
+    },
+  });
+
+  return null;
+};
+
 export const GearService = {
   createGear,
   getAllGear,
   getGearById,
   updateGear,
+  deleteGear,
 };
