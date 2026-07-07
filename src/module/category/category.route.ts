@@ -26,4 +26,18 @@ router.post(
   CategoryController.createCategory,
 );
 
+router.patch(
+  "/:id",
+  auth,
+  authorize(Role.ADMIN),
+  CategoryController.updateCategory,
+);
+
+router.delete(
+  "/:id",
+  auth,
+  authorize(Role.ADMIN),
+  CategoryController.deleteCategory,
+); 
+
 export default router;

@@ -55,8 +55,66 @@ const getCategoryById = catchAsync(async (req, res) => {
   });
 });
 
+const updateCategory = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== "string") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Category id is required.",
+    );
+  }
+
+  const { name, description } = req.body;
+
+  if (
+    name === undefined &&
+    description === undefined
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "No data provided for update.",
+    );
+  }
+
+  const result =
+    await CategoryService.updateCategory(id, {
+      name,
+      description,
+    });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Category updated successfully.",
+    data: result,
+  });
+});
+
+const deleteCategory = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== "string") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Category id is required.",
+    );
+  }
+
+  await CategoryService.deleteCategory(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Category deleted successfully.",
+    data: null,
+  });
+});
+
 export const CategoryController = {
   createCategory,
   getAllCategories,
   getCategoryById,
+  updateCategory,
+  deleteCategory,
 };
