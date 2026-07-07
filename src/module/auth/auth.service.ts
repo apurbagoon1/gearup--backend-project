@@ -98,7 +98,59 @@ const login = async (payload: any) => {
   };
 };
 
+const getMyProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      photo: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return user;
+};
+
+const updateMyProfile = async (
+  userId: string,
+  payload: {
+    name?: string;
+    phone?: string;
+    photo?: string;
+  },
+) => {
+  const user = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: payload,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      photo: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return user;
+};
+
 export const AuthService = {
   register,
   login,
+  getMyProfile,
+  updateMyProfile,
 };

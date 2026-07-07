@@ -21,7 +21,62 @@ const login = async (req: Request, res: Response) => {
   });
 };
 
+const getMyProfile = async (
+  req: Request,
+  res: Response,
+) => {
+
+  const result = await AuthService.getMyProfile(
+    req.user!.userId,
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Profile retrieved successfully.",
+    data: result,
+  });
+
+};
+
+const updateMyProfile = async (
+  req: Request,
+  res: Response,
+) => {
+  const { name, phone, photo } = req.body;
+
+  if (
+    name === undefined &&
+    phone === undefined &&
+    photo === undefined
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "No data provided for update.",
+      errorDetails: null,
+    });
+  }
+
+  const payload = {
+    name,
+    phone,
+    photo,
+  };
+
+  const result = await AuthService.updateMyProfile(
+    req.user!.userId,
+    payload,
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully.",
+    data: result,
+  });
+};
+
 export const AuthController = {
   register,
   login,
+  getMyProfile,
+  updateMyProfile,
 };
