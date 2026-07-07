@@ -26,4 +26,11 @@ router.get(
   GearController.getGearById,
 );
 
+router.patch(
+  "/:id",
+  auth,
+  authorize(Role.PROVIDER),
+  GearController.updateGear,
+);
+
 export default router;

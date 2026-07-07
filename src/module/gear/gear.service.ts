@@ -121,8 +121,67 @@ const getGearById = async (id: string) => {
   return gear;
 };
 
+const updateGear = async (
+  providerId: string,
+  gearId: string,
+  payload: {
+    title?: string;
+    description?: string;
+    brand?: string;
+    image?: string;
+    pricePerDay?: number;
+    stock?: number;
+    categoryId?: string;
+  },
+) => {
+  const gear = await prisma.gear.findUnique({
+    where: {
+      id: gearId,
+    },
+  });
+
+  if (!gear) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Gear not found.",
+    );
+  }
+
+  if (gear.providerId !== providerId) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not allowed to update this gear.",
+    );
+  }
+
+  if (payload.categoryId) {
+    const category = await prisma.category.findUnique({
+      where: {
+        id: payload.categoryId,
+      },
+    });
+
+    if (!category) {
+      throw new AppError(
+        httpStatus.NOT_FOUND,
+        "Category not found.",
+      );
+    }
+  }
+
+  const updatedGear = await prisma.gear.update({
+    where: {
+      id: gearId,
+    },
+    data: payload,
+  });
+
+  return updatedGear;
+};
+
 export const GearService = {
   createGear,
   getAllGear,
   getGearById,
+  updateGear,
 };

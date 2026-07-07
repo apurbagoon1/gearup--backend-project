@@ -101,8 +101,82 @@ const getGearById = catchAsync(async (req, res) => {
   });
 });
 
+const updateGear = catchAsync(async (req, res) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+
+  if (!id) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Gear id is required.",
+    );
+  }
+
+  const {
+    title,
+    description,
+    brand,
+    image,
+    pricePerDay,
+    stock,
+    categoryId,
+  } = req.body;
+
+  if (
+    title === undefined &&
+    description === undefined &&
+    brand === undefined &&
+    image === undefined &&
+    pricePerDay === undefined &&
+    stock === undefined &&
+    categoryId === undefined
+  ) {
+    sendResponse(res, {
+      statusCode: httpStatus.BAD_REQUEST,
+      success: false,
+      message: "No data provided for update.",
+      data: null,
+    });
+
+    return;
+  }
+
+  const payload = {
+    title,
+    description,
+    brand,
+    image,
+    pricePerDay:
+      pricePerDay !== undefined
+        ? Number(pricePerDay)
+        : undefined,
+    stock:
+      stock !== undefined
+        ? Number(stock)
+        : undefined,
+    categoryId,
+  };
+
+  const result = await GearService.updateGear(
+    req.user!.userId,
+    id,
+    payload,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Gear updated successfully.",
+    data: result,
+  });
+
+  return;
+});
+
 export const GearController = {
   createGear,
   getAllGear,
   getGearById,
+  updateGear,
 };

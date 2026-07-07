@@ -27,9 +27,7 @@ const login = catchAsync(async (req, res) => {
 });
 
 const getMyProfile = catchAsync(async (req, res) => {
-  const result = await AuthService.getMyProfile(
-    req.user!.userId,
-  );
+  const result = await AuthService.getMyProfile(req.user!.userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -42,17 +40,15 @@ const getMyProfile = catchAsync(async (req, res) => {
 const updateMyProfile = catchAsync(async (req, res) => {
   const { name, phone, photo } = req.body;
 
-  if (
-    name === undefined &&
-    phone === undefined &&
-    photo === undefined
-  ) {
-    return sendResponse(res, {
+  if (name === undefined && phone === undefined && photo === undefined) {
+    sendResponse(res, {
       statusCode: httpStatus.BAD_REQUEST,
       success: false,
       message: "No data provided for update.",
       data: null,
     });
+
+    return;
   }
 
   const payload = {
@@ -61,10 +57,7 @@ const updateMyProfile = catchAsync(async (req, res) => {
     photo,
   };
 
-  const result = await AuthService.updateMyProfile(
-    req.user!.userId,
-    payload,
-  );
+  const result = await AuthService.updateMyProfile(req.user!.userId, payload);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
