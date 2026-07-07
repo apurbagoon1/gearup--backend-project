@@ -8,15 +8,8 @@ import AppError from "../../errors/AppError";
 import { GearService } from "./gear.service";
 
 const createGear = catchAsync(async (req, res) => {
-  const {
-    title,
-    description,
-    brand,
-    image,
-    pricePerDay,
-    stock,
-    categoryId,
-  } = req.body;
+  const { title, description, brand, image, pricePerDay, stock, categoryId } =
+    req.body;
 
   if (
     !title ||
@@ -27,24 +20,18 @@ const createGear = catchAsync(async (req, res) => {
     stock === undefined ||
     !categoryId
   ) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "All fields are required.",
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "All fields are required.");
   }
 
-  const result = await GearService.createGear(
-    req.user!.userId,
-    {
-      title,
-      description,
-      brand,
-      image,
-      pricePerDay: Number(pricePerDay),
-      stock: Number(stock),
-      categoryId,
-    },
-  );
+  const result = await GearService.createGear(req.user!.userId, {
+    title,
+    description,
+    brand,
+    image,
+    pricePerDay: Number(pricePerDay),
+    stock: Number(stock),
+    categoryId,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -56,20 +43,32 @@ const createGear = catchAsync(async (req, res) => {
 
 const getAllGear = catchAsync(async (req, res) => {
   const result = await GearService.getAllGear({
-    search:
-      typeof req.query.search === "string"
-        ? req.query.search
-        : undefined,
+    search: typeof req.query.search === "string" ? req.query.search : undefined,
 
     category:
-      typeof req.query.category === "string"
-        ? req.query.category
+      typeof req.query.category === "string" ? req.query.category : undefined,
+
+    brand: typeof req.query.brand === "string" ? req.query.brand : undefined,
+
+    minPrice:
+      typeof req.query.minPrice === "string" ? req.query.minPrice : undefined,
+
+    maxPrice:
+      typeof req.query.maxPrice === "string" ? req.query.maxPrice : undefined,
+
+    isAvailable:
+      typeof req.query.isAvailable === "string"
+        ? req.query.isAvailable
         : undefined,
 
-    brand:
-      typeof req.query.brand === "string"
-        ? req.query.brand
-        : undefined,
+    page: typeof req.query.page === "string" ? req.query.page : undefined,
+
+    limit: typeof req.query.limit === "string" ? req.query.limit : undefined,
+
+    sortBy: typeof req.query.sortBy === "string" ? req.query.sortBy : undefined,
+
+    sortOrder:
+      typeof req.query.sortOrder === "string" ? req.query.sortOrder : undefined,
   });
 
   sendResponse(res, {
@@ -78,20 +77,18 @@ const getAllGear = catchAsync(async (req, res) => {
     message: "Gear retrieved successfully.",
     data: result,
   });
+
+  return;
 });
 
 const getGearById = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   if (!id || typeof id !== "string") {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Gear id is required.",
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "Gear id is required.");
   }
 
-  const result =
-    await GearService.getGearById(id);
+  const result = await GearService.getGearById(id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -102,26 +99,14 @@ const getGearById = catchAsync(async (req, res) => {
 });
 
 const updateGear = catchAsync(async (req, res) => {
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id;
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
   if (!id) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Gear id is required.",
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "Gear id is required.");
   }
 
-  const {
-    title,
-    description,
-    brand,
-    image,
-    pricePerDay,
-    stock,
-    categoryId,
-  } = req.body;
+  const { title, description, brand, image, pricePerDay, stock, categoryId } =
+    req.body;
 
   if (
     title === undefined &&
@@ -147,22 +132,12 @@ const updateGear = catchAsync(async (req, res) => {
     description,
     brand,
     image,
-    pricePerDay:
-      pricePerDay !== undefined
-        ? Number(pricePerDay)
-        : undefined,
-    stock:
-      stock !== undefined
-        ? Number(stock)
-        : undefined,
+    pricePerDay: pricePerDay !== undefined ? Number(pricePerDay) : undefined,
+    stock: stock !== undefined ? Number(stock) : undefined,
     categoryId,
   };
 
-  const result = await GearService.updateGear(
-    req.user!.userId,
-    id,
-    payload,
-  );
+  const result = await GearService.updateGear(req.user!.userId, id, payload);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -175,21 +150,13 @@ const updateGear = catchAsync(async (req, res) => {
 });
 
 const deleteGear = catchAsync(async (req, res) => {
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id;
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
   if (!id) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Gear id is required.",
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "Gear id is required.");
   }
 
-  await GearService.deleteGear(
-    req.user!.userId,
-    id,
-  );
+  await GearService.deleteGear(req.user!.userId, id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

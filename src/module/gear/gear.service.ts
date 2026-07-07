@@ -38,51 +38,120 @@ const getAllGear = async (query: {
   search?: string;
   category?: string;
   brand?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  isAvailable?: string;
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }) => {
-  const { search, category, brand } = query;
+  const {
+    search,
+    category,
+    brand,
+    minPrice,
+    maxPrice,
+    isAvailable,
+    page = "1",
+    limit = "10",
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = query;
 
-  return prisma.gear.findMany({
-    where: {
-      AND: [
-        search
-          ? {
-              title: {
-                contains: search,
-                mode: "insensitive",
-              },
-            }
-          : {},
+  const currentPage = Number(page);
+  const perPage = Number(limit);
 
-        category
-          ? {
-              category: {
-                name: category,
-              },
-            }
-          : {},
+  const skip = (currentPage - 1) * perPage;
 
-        brand
-          ? {
-              brand: {
-                equals: brand,
-                mode: "insensitive",
-              },
-            }
-          : {},
-      ],
-    },
+  const allowedSortFields = ["title", "pricePerDay", "createdAt", "stock"];
 
-    include: {
-      provider: {
-        select: {
-          id: true,
-          name: true,
+  const finalSortBy = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
+
+  const where: any = {
+    AND: [],
+  };
+
+  if (search) {
+    where.AND.push({
+      title: {
+        contains: search,
+        mode: "insensitive",
+      },
+    });
+  }
+
+  if (category) {
+    where.AND.push({
+      category: {
+        name: category,
+      },
+    });
+  }
+
+  if (brand) {
+    where.AND.push({
+      brand: {
+        equals: brand,
+        mode: "insensitive",
+      },
+    });
+  }
+
+  if (isAvailable !== undefined) {
+    where.AND.push({
+      isAvailable: isAvailable === "true",
+    });
+  }
+
+  if (minPrice || maxPrice) {
+    where.AND.push({
+      pricePerDay: {
+        gte: minPrice ? Number(minPrice) : undefined,
+        lte: maxPrice ? Number(maxPrice) : undefined,
+      },
+    });
+  }
+
+  const [gears, total] = await Promise.all([
+    prisma.gear.findMany({
+      where,
+
+      include: {
+        provider: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
+
+        category: true,
       },
 
-      category: true,
+      skip,
+
+      take: perPage,
+
+      orderBy: {
+        [finalSortBy]: sortOrder === "asc" ? "asc" : "desc",
+      },
+    }),
+
+    prisma.gear.count({
+      where,
+    }),
+  ]);
+
+  return {
+    meta: {
+      page: currentPage,
+      limit: perPage,
+      total,
+      totalPage: Math.ceil(total / perPage),
     },
-  });
+
+    data: gears,
+  };
 };
 
 const getGearById = async (id: string) => {
@@ -141,10 +210,7 @@ const updateGear = async (
   });
 
   if (!gear) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      "Gear not found.",
-    );
+    throw new AppError(httpStatus.NOT_FOUND, "Gear not found.");
   }
 
   if (gear.providerId !== providerId) {
@@ -162,10 +228,7 @@ const updateGear = async (
     });
 
     if (!category) {
-      throw new AppError(
-        httpStatus.NOT_FOUND,
-        "Category not found.",
-      );
+      throw new AppError(httpStatus.NOT_FOUND, "Category not found.");
     }
   }
 
@@ -179,10 +242,7 @@ const updateGear = async (
   return updatedGear;
 };
 
-const deleteGear = async (
-  providerId: string,
-  gearId: string,
-) => {
+const deleteGear = async (providerId: string, gearId: string) => {
   const gear = await prisma.gear.findUnique({
     where: {
       id: gearId,
@@ -190,10 +250,7 @@ const deleteGear = async (
   });
 
   if (!gear) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      "Gear not found.",
-    );
+    throw new AppError(httpStatus.NOT_FOUND, "Gear not found.");
   }
 
   if (gear.providerId !== providerId) {
