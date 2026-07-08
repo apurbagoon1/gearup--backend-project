@@ -20,4 +20,18 @@ router.patch(
   PaymentController.confirmPayment,
 );
 
+router.get(
+  "/",
+  auth,
+  authorize(Role.CUSTOMER),
+  PaymentController.getMyPayments,
+);
+
+router.get(
+  "/:paymentId",
+  auth,
+  authorize(Role.CUSTOMER),
+  PaymentController.getPaymentById,
+);
+
 export default router;

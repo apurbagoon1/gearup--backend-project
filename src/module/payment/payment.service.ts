@@ -132,7 +132,69 @@ const confirmPayment = async (customerId: string, paymentId: string) => {
   });
 };
 
+const getMyPayments = async (customerId: string) => {
+  return prisma.payment.findMany({
+    where: {
+      rentalOrder: {
+        customerId,
+      },
+    },
+
+    include: {
+      rentalOrder: {
+        include: {
+          gear: {
+            select: {
+              id: true,
+              title: true,
+              image: true,
+            },
+          },
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
+
+const getPaymentById = async (customerId: string, paymentId: string) => {
+  const payment = await prisma.payment.findFirst({
+    where: {
+      id: paymentId,
+
+      rentalOrder: {
+        customerId,
+      },
+    },
+
+    include: {
+      rentalOrder: {
+        include: {
+          gear: {
+            select: {
+              id: true,
+              title: true,
+              image: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!payment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment not found.");
+  }
+
+  return payment;
+};
+
 export const PaymentService = {
   createPaymentIntent,
   confirmPayment,
+  getMyPayments,
+  getPaymentById,
 };
