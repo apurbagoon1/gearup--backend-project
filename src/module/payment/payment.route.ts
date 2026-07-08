@@ -13,4 +13,11 @@ router.post(
   PaymentController.createPaymentIntent,
 );
 
+router.patch(
+  "/confirm/:paymentId",
+  auth,
+  authorize(Role.CUSTOMER),
+  PaymentController.confirmPayment,
+);
+
 export default router;

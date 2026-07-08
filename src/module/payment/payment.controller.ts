@@ -37,7 +37,31 @@ const createPaymentIntent =
 
   });
 
+const confirmPayment = catchAsync(async (req, res) => {
+  const { paymentId } = req.params;
+
+  if (!paymentId || typeof paymentId !== "string") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Payment id is required.",
+    );
+  }
+
+  const result =
+    await PaymentService.confirmPayment(
+      req.user!.userId,
+      paymentId,
+    );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment confirmed successfully.",
+    data: result,
+  });
+});
 
 export const PaymentController = {
   createPaymentIntent,
+  confirmPayment,
 };
