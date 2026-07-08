@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../errors/AppError";
+import { validateGearAvailability } from "../../utils/gearAvailability";
 
 const createGear = async (
   providerId: string,
@@ -14,6 +15,19 @@ const createGear = async (
     categoryId: string;
   },
 ) => {
+  const { stock, pricePerDay } = payload;
+
+  if (stock < 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Stock cannot be negative.");
+  }
+
+  if (pricePerDay <= 0) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Price per day must be greater than zero.",
+    );
+  }
+
   const category = await prisma.category.findUnique({
     where: {
       id: payload.categoryId,
@@ -28,6 +42,7 @@ const createGear = async (
     data: {
       ...payload,
       providerId,
+      isAvailable: validateGearAvailability(stock),
     },
   });
 
@@ -220,6 +235,17 @@ const updateGear = async (
     );
   }
 
+  if (payload.stock !== undefined && payload.stock < 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Stock cannot be negative.");
+  }
+
+  if (payload.pricePerDay !== undefined && payload.pricePerDay <= 0) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Price per day must be greater than zero.",
+    );
+  }
+
   if (payload.categoryId) {
     const category = await prisma.category.findUnique({
       where: {
@@ -232,11 +258,20 @@ const updateGear = async (
     }
   }
 
+  let isAvailable = gear.isAvailable;
+
+  if (payload.stock !== undefined) {
+    isAvailable = validateGearAvailability(payload.stock);
+  }
+
   const updatedGear = await prisma.gear.update({
     where: {
       id: gearId,
     },
-    data: payload,
+    data: {
+      ...payload,
+      isAvailable,
+    },
   });
 
   return updatedGear;
