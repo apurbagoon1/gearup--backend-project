@@ -31,11 +31,62 @@ const createRental = async (
     },
     select: {
       id: true,
+      providerId: true,
       stock: true,
       isAvailable: true,
       pricePerDay: true,
     },
   });
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  if (start < today) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Start date cannot be in the past.",
+    );
+  }
+
+  if (end <= start) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "End date must be after start date.",
+    );
+  }
+
+  const existingRental = await prisma.rentalOrder.findFirst({
+    where: {
+      gearId,
+
+      status: {
+        in: ["PLACED", "CONFIRMED", "PAID", "PICKED_UP"],
+      },
+
+      OR: [
+        {
+          startDate: {
+            lte: end,
+          },
+
+          endDate: {
+            gte: start,
+          },
+        },
+      ],
+    },
+  });
+
+  if (existingRental) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This gear is already booked for the selected dates.",
+    );
+  }
 
   if (!gear) {
     throw new AppError(httpStatus.NOT_FOUND, "Gear not found.");
@@ -52,55 +103,48 @@ const createRental = async (
     );
   }
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  if (start >= end) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "End date must be after start date.",
-    );
-  }
-
   const totalDays = Math.ceil(
     (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   const totalAmount = totalDays * quantity * gear.pricePerDay;
 
-  const rental = await prisma.rentalOrder.create({
-    data: {
-      customerId,
-      gearId,
-      startDate: start,
-      endDate: end,
-      quantity,
-      totalAmount,
-    },
-  });
-
-  const updatedGear = await prisma.gear.update({
-    where: {
-      id: gear.id,
-    },
-
-    data: {
-      stock: {
-        decrement: quantity,
+  return prisma.$transaction(async (tx) => {
+    const rental = await tx.rentalOrder.create({
+      data: {
+        customerId,
+        gearId,
+        startDate: start,
+        endDate: end,
+        quantity,
+        totalAmount,
       },
-    },
-  });
-  await prisma.gear.update({
-    where: {
-      id: gear.id,
-    },
+    });
 
-    data: {
-      isAvailable: updatedGear.stock > 0,
-    },
-  });
+    const updatedGear = await tx.gear.update({
+      where: {
+        id: gear.id,
+      },
 
-  return rental;
+      data: {
+        stock: {
+          decrement: quantity,
+        },
+      },
+    });
+
+    await tx.gear.update({
+      where: {
+        id: gear.id,
+      },
+
+      data: {
+        isAvailable: updatedGear.stock > 0,
+      },
+    });
+
+    return rental;
+  });
 };
 
 const getMyRentals = async (customerId: string) => {
