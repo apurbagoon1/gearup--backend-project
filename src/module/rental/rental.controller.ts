@@ -6,6 +6,7 @@ import { RentalService } from "./rental.service";
 
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { RentalStatus } from "../../../generated/prisma/client";
 
 const createRental = catchAsync(async (req, res) => {
   const { gearId, startDate, endDate, quantity } = req.body;
@@ -78,8 +79,51 @@ const getRentalById = catchAsync(async (req, res) => {
   });
 });
 
+const updateRentalStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== "string") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Rental id is required.",
+    );
+  }
+
+  const { status } = req.body;
+
+  if (!status) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Status is required.",
+    );
+  }
+
+  if (!Object.values(RentalStatus).includes(status as RentalStatus)) {
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    "Invalid rental status.",
+  );
+}
+
+  const result =
+    await RentalService.updateRentalStatus(
+      req.user!.userId,
+      id,
+      status as RentalStatus,
+    );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message:
+      "Rental status updated successfully.",
+    data: result,
+  });
+});
+
 export const RentalController = {
   createRental,
   getMyRentals,
   getRentalById,
+  updateRentalStatus,
 };

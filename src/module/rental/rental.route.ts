@@ -27,4 +27,11 @@ router.get(
   RentalController.getRentalById,
 );
 
+router.patch(
+  "/:id/status",
+  auth,
+  authorize(Role.PROVIDER),
+  RentalController.updateRentalStatus,
+);
+
 export default router;
