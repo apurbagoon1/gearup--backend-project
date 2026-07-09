@@ -1,6 +1,12 @@
 node_modules
 dist
-generated
-.env    
 
-/generated/prisma
+.env
+.env.*
+
+!.env.example
+
+generated
+
+coverage
+*.log
