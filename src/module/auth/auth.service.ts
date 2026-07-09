@@ -9,6 +9,12 @@ import AppError from "../../errors/AppError";
 const register = async (payload: any) => {
   const { name, email, password, role, phone, photo } = payload;
 
+  const allowedRoles = ["CUSTOMER", "PROVIDER"];
+
+  if (!allowedRoles.includes(role)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid role.");
+  }
+
   if (!name || !email || !password || !role) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
