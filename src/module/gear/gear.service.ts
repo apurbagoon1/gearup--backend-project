@@ -9,7 +9,7 @@ const createGear = async (
     title: string;
     description: string;
     brand: string;
-    image: string;
+    image: string[];
     pricePerDay: number;
     stock: number;
     categoryId: string;
@@ -40,8 +40,17 @@ const createGear = async (
 
   const gear = await prisma.gear.create({
     data: {
-      ...payload,
+      title: payload.title,
+      description: payload.description,
+      brand: payload.brand,
+      image: payload.image,
+      pricePerDay: payload.pricePerDay,
+      stock: payload.stock,
+
       providerId,
+
+      categoryId: payload.categoryId,
+
       isAvailable: validateGearAvailability(stock),
     },
   });
@@ -212,7 +221,7 @@ const updateGear = async (
     title?: string;
     description?: string;
     brand?: string;
-    image?: string;
+    image?: string[];
     pricePerDay?: number;
     stock?: number;
     categoryId?: string;
@@ -268,8 +277,19 @@ const updateGear = async (
     where: {
       id: gearId,
     },
+
     data: {
-      ...payload,
+      title: payload.title,
+      description: payload.description,
+      brand: payload.brand,
+      image: payload.image,
+      pricePerDay: payload.pricePerDay,
+      stock: payload.stock,
+
+      ...(payload.categoryId && {
+        categoryId: payload.categoryId,
+      }),
+
       isAvailable,
     },
   });
